@@ -124,17 +124,19 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint
 
 ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 {
-	size_t const baseLength(parseBigEndianRightPadded(_in, 0, 32));
-	size_t const expLength(parseBigEndianRightPadded(_in, 32, 32));
-	size_t const modLength(parseBigEndianRightPadded(_in, 64, 32));
+	bigint const baseLength(parseBigEndianRightPadded(_in, 0, 32));
+	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
+	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
+	assert(modLength <= numeric_limits<size_t>::max()); // Otherwise gas should be too expensive.
 
 	bigint const base(parseBigEndianRightPadded(_in, 96, baseLength));
 	bigint const exp(parseBigEndianRightPadded(_in, 96 + baseLength, expLength));
 	bigint const mod(parseBigEndianRightPadded(_in, 96 + baseLength + expLength, modLength));
 
 	bigint const result = mod != 0 ? boost::multiprecision::powm(base, exp, mod) : bigint{0};
-	
-	bytes ret(modLength); 
+
+	size_t const retLength(modLength);
+	bytes ret(retLength);
 	toBigEndian(result, ret);
 
 	return {true, ret};
