@@ -24,6 +24,7 @@
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/libtestutils/Common.h>
+#include <test/tools/libtestutils/TestLastBlockHashes.h>
 
 using namespace dev;
 using namespace dev::test;
@@ -31,9 +32,9 @@ using namespace std;
 
 namespace
 {
-LastHashes lastHashes(u256 _currentBlockNumber)
+vector<h256> lastHashes(u256 _currentBlockNumber)
 {
-	LastHashes ret;
+	vector<h256> ret;
 	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
 		ret.push_back(sha3(toString(_currentBlockNumber - i)));
 	return ret;
@@ -291,7 +292,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
 	m_envInfo.setAuthor(Address(_o["currentCoinbase"].get_str()));
 
-	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
+	m_envInfo.setLastHashes(make_shared<TestLastBlockHashes>(lastHashes(m_envInfo.number())));
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
